@@ -1,0 +1,81 @@
+plugins {
+    id 'org.springframework.boot' version '2.2.6.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.projectlombok:lombok:1.18.12'
+    annotationProcessor 'org.projectlombok:lombok:1.18.12'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+sourceSets {
+    integration {
+        java.srcDir 'src/test/integration/java'
+        resources.srcDir 'src/test/resources'
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
+
+    unit {
+        java.srcDir 'src/test/unit/java'
+        resources.srcDir 'src/test/resources'
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
+
+    acceptance {
+        java.srcDir 'src/test/acceptance/java'
+        resources.srcDir 'src/test/resources'
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
+}
+
+configurations {
+    integrationImplementation.extendsFrom testImplementation
+    unitImplementation.extendsFrom testImplementation
+    acceptanceImplementation.extendsFrom testImplementation
+    e2eImplementation.extendsFrom testImplementation
+}
+
+task testUnit(type: Test, group: 'verification') {
+    testClassesDirs = sourceSets.unit.output.classesDirs
+    classpath = sourceSets.unit.runtimeClasspath
+    useJUnitPlatform()
+}
+
+task testIntegration(type: Test, group: 'verification') {
+    testClassesDirs = sourceSets.integration.output.classesDirs
+    classpath = sourceSets.integration.runtimeClasspath
+    useJUnitPlatform()
+}
+
+task testAcceptance(type: Test, group: 'verification') {
+    testClassesDirs = sourceSets.acceptance.output.classesDirs
+    classpath = sourceSets.acceptance.runtimeClasspath
+    useJUnitPlatform()
+}
+
+test {
+    dependsOn testUnit
+    dependsOn testIntegration
+    dependsOn testAcceptance
+
+    useJUnitPlatform()
+}
