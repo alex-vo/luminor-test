@@ -1,8 +1,10 @@
 spring:
   jpa:
     open-in-view: false
-  security:
-    user
+  rabbitmq:
+    template:
+      exchange: "paymentprocessor-exchange"
+      routing-key: "abc"
 
 application:
   clients:
