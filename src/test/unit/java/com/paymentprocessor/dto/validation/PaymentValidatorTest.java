@@ -1,7 +1,9 @@
 package com.paymentprocessor.dto.validation;
 
+import com.paymentprocessor.PaymentDTOUtils;
 import com.paymentprocessor.dto.PaymentDTO;
-import com.paymentprocessor.entity.Payment;
+import com.paymentprocessor.entity.PaymentCurrency;
+import com.paymentprocessor.entity.PaymentType;
 import org.hamcrest.Matcher;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -71,13 +73,13 @@ public class PaymentValidatorTest {
     @Test
     public void shouldPreventType1PaymentNotInEuro() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE1, Payment.Currency.USD, null, null),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE1, PaymentCurrency.USD, null, null),
                 PaymentValidationSequence.class
         );
 
         assertThat(constraintViolations, hasItem(
                 allOf(
-                        hasProperty("messageTemplate", equalTo(String.format("%s only possible in %s", Payment.Type.TYPE1.name(), Payment.Currency.EUR.name()))),
+                        hasProperty("messageTemplate", equalTo(String.format("%s only possible in %s", PaymentType.TYPE1.name(), PaymentCurrency.EUR.name()))),
                         constraintViolatedOnProperty("currency")
                 )
         ));
@@ -86,13 +88,13 @@ public class PaymentValidatorTest {
     @Test
     public void shouldPreventType1PaymentInEuroWithoutDetails() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE1, Payment.Currency.EUR, null, null),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE1, PaymentCurrency.EUR, null, null),
                 PaymentValidationSequence.class
         );
 
         assertThat(constraintViolations, hasItem(
                 allOf(
-                        hasProperty("messageTemplate", equalTo(String.format("Details cannot be blank for %s payments", Payment.Type.TYPE1.name()))),
+                        hasProperty("messageTemplate", equalTo(String.format("Details cannot be blank for %s payments", PaymentType.TYPE1.name()))),
                         constraintViolatedOnProperty("details")
                 )
         ));
@@ -101,7 +103,7 @@ public class PaymentValidatorTest {
     @Test
     public void shouldAllowValidType1Payment() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE1, Payment.Currency.EUR, "123", null),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE1, PaymentCurrency.EUR, "123", null),
                 PaymentValidationSequence.class
         );
 
@@ -111,13 +113,13 @@ public class PaymentValidatorTest {
     @Test
     public void shouldPreventType2PaymentNotInDollars() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE2, Payment.Currency.EUR, null, null),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE2, PaymentCurrency.EUR, null, null),
                 PaymentValidationSequence.class
         );
 
         assertThat(constraintViolations, hasItem(
                 allOf(
-                        hasProperty("messageTemplate", equalTo(String.format("%s only possible in %s", Payment.Type.TYPE2.name(), Payment.Currency.USD.name()))),
+                        hasProperty("messageTemplate", equalTo(String.format("%s only possible in %s", PaymentType.TYPE2.name(), PaymentCurrency.USD.name()))),
                         constraintViolatedOnProperty("currency")
                 )
         ));
@@ -126,7 +128,7 @@ public class PaymentValidatorTest {
     @Test
     public void shouldAllowValidType2Payment() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE2, Payment.Currency.USD, null, null),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE2, PaymentCurrency.USD, null, null),
                 PaymentValidationSequence.class
         );
 
@@ -136,14 +138,14 @@ public class PaymentValidatorTest {
     @Test
     public void shouldPreventType3PaymentWithoutCreditorBankBIC() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE3, Payment.Currency.EUR, null, null),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE3, PaymentCurrency.EUR, null, null),
                 PaymentValidationSequence.class
         );
 
         assertThat(constraintViolations, hasItem(
                 allOf(
                         hasProperty("messageTemplate", equalTo(String.format("Creditor bank BIC cannot be blank for %s payments",
-                                Payment.Type.TYPE3.name()))),
+                                PaymentType.TYPE3.name()))),
                         constraintViolatedOnProperty("creditorBankBic")
                 )
         ));
@@ -152,7 +154,7 @@ public class PaymentValidatorTest {
     @Test
     public void shouldAllowValidType3Payment() {
         Set<ConstraintViolation<PaymentDTO>> constraintViolations = validator.validate(
-                preparePaymentDTO(Payment.Type.TYPE3, Payment.Currency.USD, null, "123"),
+                PaymentDTOUtils.preparePaymentDTO(PaymentType.TYPE3, PaymentCurrency.USD, null, "123"),
                 PaymentValidationSequence.class
         );
 
@@ -163,16 +165,5 @@ public class PaymentValidatorTest {
         return hasProperty("propertyPath", hasProperty("leafNode", hasProperty("name", equalTo(property))));
     }
 
-    private PaymentDTO preparePaymentDTO(Payment.Type type, Payment.Currency currency, String details, String creditorBankBic) {
-        PaymentDTO paymentDTO = new PaymentDTO();
-        paymentDTO.setType(type);
-        paymentDTO.setCurrency(currency);
-        paymentDTO.setDetails(details);
-        paymentDTO.setCreditorBankBic(creditorBankBic);
-        paymentDTO.setAmount(BigDecimal.ONE);
-        paymentDTO.setDebtorIban("123");
-        paymentDTO.setCreditorIban("123");
-        return paymentDTO;
-    }
 
 }

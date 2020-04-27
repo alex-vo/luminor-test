@@ -2,9 +2,11 @@ package com.paymentprocessor.service;
 
 import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
+import com.paymentprocessor.dto.mapper.PaymentMapper;
 import com.paymentprocessor.entity.Payment;
 import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
+import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    private final PaymentMapper paymentMapper;
     private final PaymentRepository paymentRepository;
+    private final ClientRepository clientRepository;
 
     public Set<Long> findPaymentIds(BigDecimal amountFrom, BigDecimal amountTo) {
         return paymentRepository.findIdsByAmountBetween(amountFrom, amountTo);
@@ -29,14 +33,15 @@ public class PaymentService {
         throw new UnsupportedOperationException();
     }
 
-    public void createPayment(PaymentDTO paymentDTO) {
-        throw new UnsupportedOperationException();
+    public void createPayment(String clientUsername, PaymentDTO paymentDTO) {
+        Payment payment = paymentMapper.toPayment(paymentDTO, clientRepository.getOne(clientUsername));
+        paymentRepository.save(payment);
         //TODO if saved valid TYPE1 or TYPE2 then enqueue notification task
     }
 
-    public void cancelPayment(Long clientId, Long id) {
+    public void cancelPayment(String clientUsername, Long id) {
         LocalDateTime now = LocalDateTime.now();
-        Payment payment = paymentRepository.findByClientIdAndId(clientId, id)
+        Payment payment = paymentRepository.findByClientUsernameAndId(clientUsername, id)
                 .orElseThrow(() -> new NotFoundException("payment not found"));
         if (now.with(LocalTime.MIN).isAfter(payment.getCreated())) {
             throw new BadRequestException("cancellation timeout exceeded");

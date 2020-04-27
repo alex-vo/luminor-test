@@ -1,3 +1,11 @@
 spring:
   jpa:
     open-in-view: false
+  security:
+    user
+
+application:
+  clients:
+    usernames:
+      - user1
+      - user2

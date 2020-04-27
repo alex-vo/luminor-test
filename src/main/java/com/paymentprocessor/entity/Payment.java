@@ -1,9 +1,7 @@
 package com.paymentprocessor.entity;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
 import javax.persistence.*;
@@ -20,9 +18,9 @@ public class Payment {
     @Id
     @GeneratedValue
     Long id;
-    Type type;
+    PaymentType type;
     BigDecimal amount;
-    Currency currency;
+    PaymentCurrency currency;
     String debtorIban;
     String creditorIban;
     String details;
@@ -30,24 +28,8 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     PaymentStatus status;
     BigDecimal cancellationFee;
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    Client client;
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    Client client; //todo change to lazy
     LocalDateTime created;
-
-    @Getter
-    @AllArgsConstructor
-    public enum Type {
-        TYPE1(BigDecimal.valueOf(0.05)), TYPE2(BigDecimal.valueOf(0.1)), TYPE3(BigDecimal.valueOf(0.15));
-
-        private BigDecimal cancellationFeeCoefficient;
-    }
-
-    public enum Currency {
-        EUR, USD
-    }
-
-//    public enum Status {
-//        NEW, CANCELLED
-//    }
 
 }

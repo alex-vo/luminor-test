@@ -28,6 +28,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             "where p.id=:pId")
     int cancelPayment(@Param("pId") Long id, @Param("pCancellationFee") BigDecimal cancellationFee);
 
-    Optional<Payment> findByClientIdAndId(Long clientId, Long id);
+    Optional<Payment> findByClientUsernameAndId(String clientUsername, Long id);
 
 }

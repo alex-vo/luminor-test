@@ -5,11 +5,11 @@ import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.validation.PaymentValidationSequence;
 import com.paymentprocessor.service.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.security.Principal;
 import java.util.Set;
 
 @RestController
@@ -21,7 +21,8 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @GetMapping
-    public Set<Long> findPaymentIds(@RequestParam BigDecimal amountFrom, @RequestParam BigDecimal amountTo) {
+    public Set<Long> findPaymentIds(@RequestParam(required = false) BigDecimal amountFrom,
+                                    @RequestParam(required = false) BigDecimal amountTo) {
         return paymentService.findPaymentIds(amountFrom, amountTo);
     }
 
@@ -32,14 +33,15 @@ public class PaymentController {
     }
 
     @PostMapping
-    public void createPayment(@Validated(PaymentValidationSequence.class) @RequestBody PaymentDTO paymentDTO) {
-        paymentService.createPayment(paymentDTO);
+    public void createPayment(Principal principal,
+                              @Validated(PaymentValidationSequence.class) @RequestBody PaymentDTO paymentDTO) {
+        paymentService.createPayment(principal.getName(), paymentDTO);
     }
 
     @PostMapping
     @RequestMapping(":id/cancel")
-    public void cancelPayment(@PathVariable Long id, Authentication authentication) {
-        paymentService.cancelPayment((Long) authentication.getPrincipal(), id);
+    public void cancelPayment(Principal principal, @PathVariable Long id) {
+        paymentService.cancelPayment(principal.getName(), id);
     }
 
 }

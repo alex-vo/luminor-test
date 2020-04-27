@@ -1,7 +1,8 @@
 package com.paymentprocessor.dto.validation;
 
 import com.paymentprocessor.dto.PaymentDTO;
-import com.paymentprocessor.entity.Payment;
+import com.paymentprocessor.entity.PaymentCurrency;
+import com.paymentprocessor.entity.PaymentType;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.validation.ConstraintValidator;
@@ -25,9 +26,9 @@ public class PaymentValidator implements ConstraintValidator<ValidPayment, Payme
     }
 
     private boolean isValidType1Payment(PaymentDTO value, ConstraintValidatorContext context) {
-        if (value.getCurrency() != Payment.Currency.EUR) {
-            context.buildConstraintViolationWithTemplate(String.format("%s only possible in %s", Payment.Type.TYPE1.name(),
-                    Payment.Currency.EUR.name()))
+        if (value.getCurrency() != PaymentCurrency.EUR) {
+            context.buildConstraintViolationWithTemplate(String.format("%s only possible in %s", PaymentType.TYPE1.name(),
+                    PaymentCurrency.EUR.name()))
                     .addPropertyNode("currency")
                     .addConstraintViolation();
             return false;
@@ -35,7 +36,7 @@ public class PaymentValidator implements ConstraintValidator<ValidPayment, Payme
 
         if (StringUtils.isBlank(value.getDetails())) {
             context.buildConstraintViolationWithTemplate(String.format("Details cannot be blank for %s payments",
-                    Payment.Type.TYPE1.name()))
+                    PaymentType.TYPE1.name()))
                     .addPropertyNode("details")
                     .addConstraintViolation();
             return false;
@@ -46,9 +47,9 @@ public class PaymentValidator implements ConstraintValidator<ValidPayment, Payme
     }
 
     private boolean isValidType2Payment(PaymentDTO value, ConstraintValidatorContext context) {
-        if (value.getCurrency() != Payment.Currency.USD) {
-            context.buildConstraintViolationWithTemplate(String.format("%s only possible in %s", Payment.Type.TYPE2.name(),
-                    Payment.Currency.USD.name()))
+        if (value.getCurrency() != PaymentCurrency.USD) {
+            context.buildConstraintViolationWithTemplate(String.format("%s only possible in %s", PaymentType.TYPE2.name(),
+                    PaymentCurrency.USD.name()))
                     .addPropertyNode("currency")
                     .addConstraintViolation();
             return false;
@@ -60,7 +61,7 @@ public class PaymentValidator implements ConstraintValidator<ValidPayment, Payme
     private boolean isValidType3Payment(PaymentDTO value, ConstraintValidatorContext context) {
         if (StringUtils.isBlank(value.getCreditorBankBic())) {
             context.buildConstraintViolationWithTemplate(String.format("Creditor bank BIC cannot be blank for %s payments",
-                    Payment.Type.TYPE3.name()))
+                    PaymentType.TYPE3.name()))
                     .addPropertyNode("creditorBankBic")
                     .addConstraintViolation();
             return false;

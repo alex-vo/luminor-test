@@ -12,11 +12,10 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication()
-                .withUser("user1").password("{noop}123")
-                .authorities("ROLE_USER")
-        ;
+    public void configureGlobal(AuthenticationManagerBuilder auth, ClientProperties clientProperties) throws Exception {
+        var conf = auth.inMemoryAuthentication();
+        clientProperties.getUsernames()
+                .forEach(username -> conf.withUser(username).password("{noop}123").authorities("ROLE_USER"));
     }
 
     @Override
