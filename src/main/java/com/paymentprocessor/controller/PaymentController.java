@@ -5,7 +5,6 @@ import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.validation.PaymentValidationSequence;
 import com.paymentprocessor.service.PaymentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,12 +19,10 @@ public class PaymentController {
     //TODO log country using aspect -> which thread it is? maybe also queue?
 
     private final PaymentService paymentService;
-    private final RabbitTemplate rabbitTemplate;
 
     @GetMapping
     public Set<Long> findPaymentIds(@RequestParam(required = false) BigDecimal amountFrom,
                                     @RequestParam(required = false) BigDecimal amountTo) {
-        rabbitTemplate.convertAndSend("Hello from RabbitMQ!");
         return paymentService.findPaymentIds(amountFrom, amountTo);
     }
 

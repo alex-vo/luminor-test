@@ -4,7 +4,6 @@ spring:
   rabbitmq:
     template:
       exchange: "paymentprocessor-exchange"
-      routing-key: "abc"
 
 application:
   clients:

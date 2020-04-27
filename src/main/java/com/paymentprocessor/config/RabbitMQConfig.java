@@ -1,33 +1,47 @@
 package com.paymentprocessor.config;
 
-import com.paymentprocessor.service.Receiver;
-import org.springframework.amqp.core.*;
+import com.paymentprocessor.service.NotificationReceiver;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Map;
+
 @Configuration
+@Slf4j
 public class RabbitMQConfig {
 
     @Bean
+    public Queue deadLetterQueue() {
+        return new Queue("deadLetterQueue", true, false, false);
+    }
+
+    @Bean
     public Queue queue() {
-        return new AnonymousQueue();
+        return new Queue("notificationQueue", true, false, false,
+                Map.of(
+                        "x-dead-letter-exchange", "",
+                        "x-dead-letter-routing-key", "deadLetterQueue"
+                ));
     }
 
     @Bean
-    public TopicExchange exchange(@Value("${spring.rabbitmq.template.exchange}") String topicExchangeName) {
-        return new TopicExchange(topicExchangeName);
+    public TopicExchange exchange() {
+        return new TopicExchange("paymentprocessor-exchange");
     }
 
     @Bean
-    public Binding binding(Queue queue, TopicExchange exchange,
-                           @Value("${spring.rabbitmq.template.routing-key}") String routingKey) {
+    public Binding binding(Queue queue, TopicExchange exchange) {
         return BindingBuilder.bind(queue)
                 .to(exchange)
-                .with(routingKey);
+                .with("");
     }
 
     @Bean
@@ -35,14 +49,16 @@ public class RabbitMQConfig {
                                                     MessageListenerAdapter listenerAdapter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
-        container.addQueues(queue());
+        container.setDefaultRequeueRejected(false);
+        container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to deadLetterQueue", throwable));
+        container.setQueueNames("notificationQueue");
         container.setMessageListener(listenerAdapter);
         return container;
     }
 
     @Bean
-    public MessageListenerAdapter listenerAdapter(Receiver receiver) {
-        return new MessageListenerAdapter(receiver);
+    public MessageListenerAdapter listenerAdapter(NotificationReceiver notificationReceiver) {
+        return new MessageListenerAdapter(notificationReceiver);
     }
 
 }

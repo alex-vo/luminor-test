@@ -4,11 +4,14 @@ import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
 import com.paymentprocessor.entity.Payment;
+import com.paymentprocessor.entity.PaymentType;
 import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
 import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
+import com.paymentprocessor.service.info.PaymentInfo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,6 +27,7 @@ public class PaymentService {
     private final PaymentMapper paymentMapper;
     private final PaymentRepository paymentRepository;
     private final ClientRepository clientRepository;
+    private final RabbitTemplate rabbitTemplate;
 
     public Set<Long> findPaymentIds(BigDecimal amountFrom, BigDecimal amountTo) {
         return paymentRepository.findIdsByAmountBetween(amountFrom, amountTo);
@@ -36,7 +40,7 @@ public class PaymentService {
     public void createPayment(String clientUsername, PaymentDTO paymentDTO) {
         Payment payment = paymentMapper.toPayment(paymentDTO, clientRepository.getOne(clientUsername));
         paymentRepository.save(payment);
-        //TODO if saved valid TYPE1 or TYPE2 then enqueue notification task
+        issuePaymentNotifications(payment);
     }
 
     public void cancelPayment(String clientUsername, Long id) {
@@ -56,6 +60,14 @@ public class PaymentService {
         BigDecimal hours = BigDecimal.valueOf(Duration.between(payment.getCreated(), relativeTo).toHours());
         BigDecimal cancellationFeeCoefficient = payment.getType().getCancellationFeeCoefficient();
         return hours.multiply(cancellationFeeCoefficient);
+    }
+
+    private void issuePaymentNotifications(Payment payment) {
+        if (payment.getType() != PaymentType.TYPE1 && payment.getType() != PaymentType.TYPE2) {
+            return;
+        }
+
+        rabbitTemplate.convertAndSend(new PaymentInfo(payment.getId(), payment.getType()));
     }
 
 }
