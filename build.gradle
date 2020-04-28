@@ -55,6 +55,13 @@ sourceSets {
         compileClasspath += main.output + test.output
         runtimeClasspath += main.output + test.output
     }
+
+    e2e {
+        java.srcDir 'src/test/e2e/java'
+        resources.srcDir 'src/test/resources'
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
 }
 
 configurations {
@@ -82,12 +89,17 @@ task testAcceptance(type: Test, group: 'verification') {
     useJUnitPlatform()
 }
 
+task testE2E(type: Test, group: 'verification') {
+    testClassesDirs = sourceSets.e2e.output.classesDirs
+    classpath = sourceSets.e2e.runtimeClasspath
+    useJUnitPlatform()
+}
+
 test {
     dependsOn testUnit
     dependsOn testIntegration
     dependsOn testAcceptance
-
-    useJUnitPlatform()
+    dependsOn testE2E
 }
 
 dockerCompose {
