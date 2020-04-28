@@ -67,7 +67,7 @@ public class PaymentService {
             return;
         }
 
-        rabbitTemplate.convertAndSend(new PaymentInfo(payment.getId(), payment.getType()));
+        rabbitTemplate.convertAndSend("notificationRoutingKey", new PaymentInfo(payment.getId(), payment.getType()));
     }
 
 }

@@ -1,5 +1,6 @@
 package com.paymentprocessor.config;
 
+import com.paymentprocessor.service.CountryLoggingService;
 import com.paymentprocessor.service.NotificationSendingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
@@ -19,46 +20,82 @@ import java.util.Map;
 public class RabbitMQConfig {
 
     @Bean
-    public Queue deadLetterQueue() {
-        return new Queue("deadLetterQueue", true, false, false);
-    }
-
-    @Bean
-    public Queue queue() {
-        return new Queue("notificationQueue", true, false, false,
-                Map.of(
-                        "x-dead-letter-exchange", "",
-                        "x-dead-letter-routing-key", "deadLetterQueue"
-                ));
-    }
-
-    @Bean
     public TopicExchange exchange() {
         return new TopicExchange("paymentprocessor-exchange");
     }
 
     @Bean
-    public Binding binding(Queue queue, TopicExchange exchange) {
-        return BindingBuilder.bind(queue)
-                .to(exchange)
-                .with("");
+    public Queue notificationDeadLetterQueue() {
+        return new Queue("notificationDeadLetterQueue", true, false, false);
     }
 
     @Bean
-    public SimpleMessageListenerContainer container(ConnectionFactory connectionFactory,
-                                                    MessageListenerAdapter listenerAdapter) {
-        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
+    public Queue notificationQueue() {
+        return new Queue("notificationQueue", true, false, false,
+                Map.of(
+                        "x-dead-letter-exchange", "",
+                        "x-dead-letter-routing-key", "notificationDeadLetterQueue"
+                ));
+    }
+
+    @Bean
+    public Binding notificationBinding(Queue notificationQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(notificationQueue)
+                .to(exchange)
+                .with("notificationRoutingKey");
+    }
+
+    @Bean
+    public MessageListenerAdapter notificationListenerAdapter(NotificationSendingService notificationSendingService) {
+        return new MessageListenerAdapter(notificationSendingService);
+    }
+
+    @Bean
+    public SimpleMessageListenerContainer notificationContainer(ConnectionFactory connectionFactory,
+                                                                MessageListenerAdapter notificationListenerAdapter) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setDefaultRequeueRejected(false);
-        container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to deadLetterQueue", throwable));
+        container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to notificationDeadLetterQueue", throwable));
         container.setQueueNames("notificationQueue");
-        container.setMessageListener(listenerAdapter);
+        container.setMessageListener(notificationListenerAdapter);
         return container;
     }
 
     @Bean
-    public MessageListenerAdapter listenerAdapter(NotificationSendingService notificationSendingService) {
-        return new MessageListenerAdapter(notificationSendingService);
+    public Queue countryLoggingDeadLetterQueue() {
+        return new Queue("countryLoggingDeadLetterQueue", true, false, false);
+    }
+
+    @Bean
+    public Queue countryLoggingQueue() {
+        return new Queue("countryLoggingQueue", true, false, false,
+                Map.of(
+                        "x-dead-letter-exchange", "",
+                        "x-dead-letter-routing-key", "countryLoggingDeadLetterQueue"
+                ));
+    }
+
+    @Bean
+    public Binding countryLoggingBinding(Queue countryLoggingQueue, TopicExchange exchange) {
+        return BindingBuilder.bind(countryLoggingQueue)
+                .to(exchange)
+                .with("countryLoggingRoutingKey");
+    }
+
+    @Bean
+    public MessageListenerAdapter countryLoggingListenerAdapter(CountryLoggingService countryLoggingService) {
+        return new MessageListenerAdapter(countryLoggingService);
+    }
+
+    @Bean
+    public SimpleMessageListenerContainer countryLoggingContainer(ConnectionFactory connectionFactory,
+                                                                  MessageListenerAdapter countryLoggingListenerAdapter) {
+        SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
+        container.setDefaultRequeueRejected(false);
+        container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to countryLoggingDeadLetterQueue", throwable));
+        container.setQueueNames("countryLoggingQueue");
+        container.setMessageListener(countryLoggingListenerAdapter);
+        return container;
     }
 
 }
