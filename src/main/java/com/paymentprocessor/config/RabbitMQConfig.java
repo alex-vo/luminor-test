@@ -1,6 +1,6 @@
 package com.paymentprocessor.config;
 
-import com.paymentprocessor.service.NotificationReceiver;
+import com.paymentprocessor.service.NotificationSendingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
@@ -57,8 +57,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public MessageListenerAdapter listenerAdapter(NotificationReceiver notificationReceiver) {
-        return new MessageListenerAdapter(notificationReceiver);
+    public MessageListenerAdapter listenerAdapter(NotificationSendingService notificationSendingService) {
+        return new MessageListenerAdapter(notificationSendingService);
     }
 
 }

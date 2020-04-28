@@ -31,5 +31,6 @@ public class Payment {
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     Client client; //todo change to lazy
     LocalDateTime created;
+    Boolean externalServiceSuccessfullyNotified;
 
 }

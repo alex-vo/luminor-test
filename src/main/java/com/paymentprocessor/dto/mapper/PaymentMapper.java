@@ -16,6 +16,7 @@ public interface PaymentMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "cancellationFee", ignore = true)
+    @Mapping(target = "externalServiceSuccessfullyNotified", ignore = true)
     @Mapping(target = "status", constant = "NEW")
     @Mapping(target = "created", expression = "java(LocalDateTime.now())")
     Payment toPayment(PaymentDTO paymentDTO, Client client);

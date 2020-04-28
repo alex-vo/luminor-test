@@ -20,6 +20,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             "  and (:pAmountTo is null or p.amount <= :pAmountTo)")
     Set<Long> findIdsByAmountBetween(@Param("pAmountFrom") BigDecimal amountFrom, @Param("pAmountTo") BigDecimal amountTo);
 
+    Optional<Payment> findByClientUsernameAndId(String clientUsername, Long id);
+
     @Modifying
     @Transactional
     @Query("update Payment p " +
@@ -28,6 +30,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             "where p.id=:pId")
     int cancelPayment(@Param("pId") Long id, @Param("pCancellationFee") BigDecimal cancellationFee);
 
-    Optional<Payment> findByClientUsernameAndId(String clientUsername, Long id);
+    @Modifying
+    @Transactional
+    @Query("update Payment p " +
+            "set p.externalServiceSuccessfullyNotified = :pExternalServiceSuccessfullyNotified " +
+            "where p.id=:pId")
+    int updateExternalServiceNotifiedStatus(@Param("pId") Long id,
+                                            @Param("pExternalServiceSuccessfullyNotified") Boolean externalServiceNotified);
 
 }

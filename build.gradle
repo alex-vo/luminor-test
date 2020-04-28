@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '2.2.6.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
     id 'java'
+    id 'com.avast.gradle.docker-compose' version '0.8.14'
 }
 
 group = 'com.example'
@@ -84,4 +85,14 @@ test {
     dependsOn testAcceptance
 
     useJUnitPlatform()
+}
+
+dockerCompose {
+    rabbit {
+        useComposeFiles = ['docker-compose.yml']
+    }
+}
+
+bootRun {
+    dependsOn 'rabbitComposeUp'
 }
