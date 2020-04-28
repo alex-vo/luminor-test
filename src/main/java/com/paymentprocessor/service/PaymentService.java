@@ -9,6 +9,7 @@ import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
 import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
+import com.paymentprocessor.repository.view.PaymentView;
 import com.paymentprocessor.service.info.PaymentInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -47,20 +48,20 @@ public class PaymentService {
 
     public void cancelPayment(String clientUsername, Long id) {
         LocalDateTime now = LocalDateTime.now();
-        Payment payment = paymentRepository.findByClientUsernameAndId(clientUsername, id)
+        PaymentView paymentView = paymentRepository.findByClientUsernameAndId(clientUsername, id)
                 .orElseThrow(() -> new NotFoundException("payment not found"));
-        if (now.with(LocalTime.MIN).isAfter(payment.getCreated())) {
+        if (now.with(LocalTime.MIN).isAfter(paymentView.getCreated())) {
             throw new BadRequestException("cancellation timeout exceeded");
         }
 
-        BigDecimal cancellationFee = calculateCancellationFee(payment, now);
+        BigDecimal cancellationFee = calculateCancellationFee(paymentView, now);
 
         paymentRepository.cancelPayment(id, cancellationFee);
     }
 
-    private BigDecimal calculateCancellationFee(Payment payment, LocalDateTime relativeTo) {
-        BigDecimal hours = BigDecimal.valueOf(Duration.between(payment.getCreated(), relativeTo).toHours());
-        BigDecimal cancellationFeeCoefficient = payment.getType().getCancellationFeeCoefficient();
+    private BigDecimal calculateCancellationFee(PaymentView paymentView, LocalDateTime relativeTo) {
+        BigDecimal hours = BigDecimal.valueOf(Duration.between(paymentView.getCreated(), relativeTo).toHours());
+        BigDecimal cancellationFeeCoefficient = paymentView.getType().getCancellationFeeCoefficient();
         return hours.multiply(cancellationFeeCoefficient);
     }
 

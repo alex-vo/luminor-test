@@ -1,6 +1,7 @@
 package com.paymentprocessor.repository;
 
 import com.paymentprocessor.entity.Payment;
+import com.paymentprocessor.repository.view.PaymentView;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,9 +21,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             "  and (:pAmountTo is null or p.amount <= :pAmountTo)")
     Set<Long> findIdsByAmountBetween(@Param("pAmountFrom") BigDecimal amountFrom, @Param("pAmountTo") BigDecimal amountTo);
 
-    Optional<Payment> findByClientUsernameAndId(String clientUsername, Long id);
+    Optional<PaymentView> findByClientUsernameAndId(String clientUsername, Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Payment p " +
             "set p.status = com.paymentprocessor.entity.PaymentStatus.CANCELLED, " +
@@ -30,7 +31,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
             "where p.id=:pId")
     int cancelPayment(@Param("pId") Long id, @Param("pCancellationFee") BigDecimal cancellationFee);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Transactional
     @Query("update Payment p " +
             "set p.externalServiceSuccessfullyNotified = :pExternalServiceSuccessfullyNotified " +

@@ -18,18 +18,25 @@ public class Payment {
     @Id
     @GeneratedValue
     Long id;
+    @Column(nullable = false)
     PaymentType type;
+    @Column(nullable = false)
     BigDecimal amount;
+    @Column(nullable = false)
     PaymentCurrency currency;
+    @Column(nullable = false)
     String debtorIban;
+    @Column(nullable = false)
     String creditorIban;
     String details;
     String creditorBankBic;
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     PaymentStatus status;
     BigDecimal cancellationFee;
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
-    Client client; //todo change to lazy
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    Client client;
+    @Column(nullable = false)
     LocalDateTime created;
     Boolean externalServiceSuccessfullyNotified;
 

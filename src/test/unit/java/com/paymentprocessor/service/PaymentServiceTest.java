@@ -10,6 +10,7 @@ import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
 import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
+import com.paymentprocessor.repository.view.PaymentView;
 import com.paymentprocessor.service.info.PaymentInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -120,7 +121,7 @@ public class PaymentServiceTest {
     @Test(expected = BadRequestException.class)
     public void shouldThrowBadRequestExceptionIfCancellationIsTooLate() {
         when(paymentRepository.findByClientUsernameAndId("user4", 191L))
-                .thenReturn(Optional.of(preparePayment(191L, LocalDateTime.now().minusDays(1), PaymentType.TYPE1)));
+                .thenReturn(Optional.of(preparePaymentView(LocalDateTime.now().minusDays(1), PaymentType.TYPE1)));
 
         paymentService.cancelPayment("user4", 191L);
     }
@@ -133,11 +134,25 @@ public class PaymentServiceTest {
         PowerMockito.when(LocalDateTime.now()).thenReturn(now/*PowerMockito.mock(LocalDateTime.class)*/);
 
         when(paymentRepository.findByClientUsernameAndId("user5", 192L))
-                .thenReturn(Optional.of(preparePayment(192L, created, PaymentType.TYPE2)));
+                .thenReturn(Optional.of(preparePaymentView(created, PaymentType.TYPE2)));
 
         paymentService.cancelPayment("user5", 192L);
 
         verify(paymentRepository).cancelPayment(192L, BigDecimal.valueOf(2).multiply(PaymentType.TYPE2.getCancellationFeeCoefficient()));
+    }
+
+    private PaymentView preparePaymentView(LocalDateTime created, PaymentType type) {
+        return new PaymentView() {
+            @Override
+            public LocalDateTime getCreated() {
+                return created;
+            }
+
+            @Override
+            public PaymentType getType() {
+                return type;
+            }
+        };
     }
 
     @Test
