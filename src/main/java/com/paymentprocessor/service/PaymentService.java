@@ -34,7 +34,9 @@ public class PaymentService {
     }
 
     public SinglePaymentDTO findPayment(Long id) {
-        throw new UnsupportedOperationException();
+        return paymentRepository.findById(id)
+                .map(p -> new SinglePaymentDTO(p.getId(), p.getCancellationFee()))
+                .orElseThrow(() -> new NotFoundException("payment not found"));
     }
 
     public void createPayment(String clientUsername, PaymentDTO paymentDTO) {

@@ -27,7 +27,7 @@ public class CountryLoggingService {
         String countryName;
     }
 
-    private static final String URL = "https://freegeoip.app/json/";
+    public static final String URL = "https://freegeoip.app/json/";
 
     private final RestTemplate externalServiceRestTemplate;
 

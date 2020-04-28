@@ -37,13 +37,12 @@ public class CountryLoggingAspect {
 
     private HttpServletRequest getCurrentHttpRequest() {
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (requestAttributes instanceof ServletRequestAttributes) {
-            HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-            return request;
+        if (!(requestAttributes instanceof ServletRequestAttributes)) {
+            log.error("Not called in the context of an HTTP request");
+            return null;
         }
 
-        log.error("Not called in the context of an HTTP request");
-        return null;
+        return ((ServletRequestAttributes) requestAttributes).getRequest();
     }
 
 }
