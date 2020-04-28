@@ -16,7 +16,6 @@ import java.util.Set;
 @RequestMapping("api/v1/payment")
 @RequiredArgsConstructor
 public class PaymentController {
-    //TODO log country using aspect -> which thread it is? maybe also queue?
 
     private final PaymentService paymentService;
 
