@@ -64,6 +64,7 @@ public class PaymentRepositoryTest {
         payment.setCreditorIban(RandomStringUtils.random(5));
         payment.setDebtorIban(RandomStringUtils.random(5));
         payment.setCurrency(PaymentCurrency.EUR);
+        payment.setDetails("details_123");
         return paymentRepository.save(payment);
     }
 
