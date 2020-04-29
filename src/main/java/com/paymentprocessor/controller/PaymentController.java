@@ -26,7 +26,7 @@ public class PaymentController {
     }
 
     @GetMapping
-    @RequestMapping(":id")
+    @RequestMapping("{id}")
     public SinglePaymentDTO findPayment(@PathVariable Long id) {
         return paymentService.findPayment(id);
     }
@@ -38,7 +38,7 @@ public class PaymentController {
     }
 
     @PostMapping
-    @RequestMapping(":id/cancel")
+    @RequestMapping("{id}/cancel")
     public void cancelPayment(Principal principal, @PathVariable Long id) {
         paymentService.cancelPayment(principal.getName(), id);
     }

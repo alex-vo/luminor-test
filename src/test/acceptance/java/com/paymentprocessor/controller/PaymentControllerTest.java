@@ -85,11 +85,7 @@ public class PaymentControllerTest {
         String rawResponse = performPost("/api/v1/payment", paymentDTO);
         Long paymentId = Long.parseLong(rawResponse);
 
-        mvc.perform(MockMvcRequestBuilders
-                .get("/api/v1/payment"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(paymentCount + 1)))
-                .andReturn().getResponse().getContentAsString();
+        assertPaymentCount(paymentCount + 1);
 
         Awaitility.waitAtMost(Duration.ofSeconds(10L)).pollInterval(Duration.ofSeconds(1L)).until(() -> {
             assertThat(paymentRepository.findById(paymentId).orElseThrow(),
@@ -112,11 +108,7 @@ public class PaymentControllerTest {
         String rawResponse = performPost("/api/v1/payment", paymentDTO);
         Long paymentId = Long.parseLong(rawResponse);
 
-        mvc.perform(MockMvcRequestBuilders
-                .get("/api/v1/payment"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(paymentCount + 1)))
-                .andReturn().getResponse().getContentAsString();
+        assertPaymentCount(paymentCount + 1);
 
         Awaitility.waitAtMost(Duration.ofSeconds(10L)).pollInterval(Duration.ofSeconds(1L)).until(() -> {
             assertThat(paymentRepository.findById(paymentId).orElseThrow(),
@@ -139,6 +131,39 @@ public class PaymentControllerTest {
                 .content(objectMapper.writeValueAsString(paymentDTO))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().is(400));
+    }
+
+    @Test
+    @WithMockUser("user1")
+    public void shouldCreateThenCancelPayment() throws Exception {
+        int paymentCount = getPaymentCount();
+        PaymentDTO paymentDTO = objectMapper.readValue(new File("src/test/resources/valid_type2_payment.json"), PaymentDTO.class);
+
+        String rawResponse = performPost("/api/v1/payment", paymentDTO);
+        Long paymentId = Long.parseLong(rawResponse);
+
+        assertPaymentCount(paymentCount + 1);
+
+        mvc.perform(MockMvcRequestBuilders
+                .post("/api/v1/payment/" + paymentId + "/cancel")
+                .content(objectMapper.writeValueAsString(paymentDTO))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        assertPaymentCount(paymentCount);
+        mvc.perform(MockMvcRequestBuilders
+                .get("/api/v1/payment/" + paymentId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(paymentId.intValue())))
+                .andExpect(jsonPath("$.cancellationFee", is(0.0)));
+    }
+
+    private void assertPaymentCount(int paymentCount) throws Exception {
+        mvc.perform(MockMvcRequestBuilders
+                .get("/api/v1/payment"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(paymentCount)))
+                .andReturn().getResponse().getContentAsString();
     }
 
     private String performPost(String url, PaymentDTO paymentDTO) throws Exception {
