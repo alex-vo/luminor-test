@@ -1,4 +1,4 @@
-To run the application at port 8080 execute
+Application assumes that docker is installed on the host. To run the application at port 8080 execute
 ```
 ./gradlew bootRun
 ```
