@@ -10,3 +10,6 @@ application:
     usernames:
       - user1
       - user2
+  external:
+    type1_payment_notification_url: 'https://www.google.com/lets_get_404'
+    type2_payment_notification_url: 'https://www.google.com/'

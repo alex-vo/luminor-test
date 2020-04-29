@@ -3,9 +3,9 @@ package com.paymentprocessor.service;
 import com.paymentprocessor.entity.PaymentType;
 import com.paymentprocessor.repository.PaymentRepository;
 import com.paymentprocessor.service.info.PaymentInfo;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
@@ -22,13 +22,20 @@ public class NotificationSendingServiceTest {
     PaymentRepository paymentRepository;
     @Mock
     RestTemplate externalServiceRestTemplate;
+    String type1NotificationUrl = "http://abc.com/notify";
+    String type2NotificationUrl = "http://def.com/notify";
 
-    @InjectMocks
     NotificationSendingService notificationSendingService;
+
+    @Before
+    public void setup() {
+        notificationSendingService = new NotificationSendingService(paymentRepository, externalServiceRestTemplate,
+                type1NotificationUrl, type2NotificationUrl);
+    }
 
     @Test
     public void shouldSetExternalServiceNotifiedStatusToFalseIfExternalServiceRepliedWithNon2xxStatusCode() {
-        when(externalServiceRestTemplate.getForEntity(NotificationSendingService.TYPE1_NOTIFICATION_URL, Void.class))
+        when(externalServiceRestTemplate.getForEntity(type1NotificationUrl, Void.class))
                 .thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 
         notificationSendingService.handleMessage(new PaymentInfo(23L, PaymentType.TYPE1));
@@ -38,7 +45,7 @@ public class NotificationSendingServiceTest {
 
     @Test
     public void shouldSetExternalServiceNotifiedStatusToFalseIfExternalServiceNotAvailable() {
-        when(externalServiceRestTemplate.getForEntity(NotificationSendingService.TYPE1_NOTIFICATION_URL, Void.class))
+        when(externalServiceRestTemplate.getForEntity(type1NotificationUrl, Void.class))
                 .thenThrow(new RuntimeException());
 
         notificationSendingService.handleMessage(new PaymentInfo(25L, PaymentType.TYPE1));
@@ -48,7 +55,7 @@ public class NotificationSendingServiceTest {
 
     @Test
     public void shouldSetExternalServiceNotifiedStatusToTrueIfExternalServiceRepliedWith2xxStatusCode() {
-        when(externalServiceRestTemplate.getForEntity(NotificationSendingService.TYPE2_NOTIFICATION_URL, Void.class))
+        when(externalServiceRestTemplate.getForEntity(type2NotificationUrl, Void.class))
                 .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         notificationSendingService.handleMessage(new PaymentInfo(24L, PaymentType.TYPE2));

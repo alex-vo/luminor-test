@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.repository.PaymentRepository;
 import org.awaitility.Awaitility;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockserver.integration.ClientAndServer;
+import org.mockserver.model.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +32,7 @@ import java.time.Duration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockserver.model.HttpRequest.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -46,7 +50,9 @@ public class PaymentControllerTest {
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         public void initialize(ConfigurableApplicationContext configurableApplicationContext) {
             TestPropertyValues.of(
-                    "spring.rabbitmq.port=" + dockerComposeContainer.getMappedPort(5672)
+                    "spring.rabbitmq.port=" + dockerComposeContainer.getMappedPort(5672),
+                    "application.external.type1_payment_notification_url=http://localhost:8081/type1_notify",
+                    "application.external.type2_payment_notification_url=http://localhost:8081/type2_notify"
             ).applyTo(configurableApplicationContext.getEnvironment());
         }
     }
@@ -60,6 +66,15 @@ public class PaymentControllerTest {
     PaymentRepository paymentRepository;
 
     ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeClass
+    public static void setup() {
+        ClientAndServer clientAndServer = ClientAndServer.startClientAndServer(8081);
+        clientAndServer.when(request().withMethod("GET").withPath("/type1_notify"))
+                .respond(HttpResponse.response().withStatusCode(500));
+        clientAndServer.when(request().withMethod("GET").withPath("/type2_notify"))
+                .respond(HttpResponse.response().withStatusCode(200));
+    }
 
     @Test
     @WithMockUser("user1")
@@ -113,6 +128,17 @@ public class PaymentControllerTest {
                 containsString("Call [GET http://localhost/api/v1/payment, ip=127.0.0.1] was made from"),
                 containsString("Call [POST http://localhost/api/v1/payment, ip=127.0.0.1] was made from")
         ));
+    }
+
+    @Test
+    @WithMockUser("user1")
+    public void shouldFailToCreatePayment() throws Exception {
+        PaymentDTO paymentDTO = objectMapper.readValue(new File("src/test/resources/invalid_payment.json"), PaymentDTO.class);
+        mvc.perform(MockMvcRequestBuilders
+                .post("/api/v1/payment")
+                .content(objectMapper.writeValueAsString(paymentDTO))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(400));
     }
 
     private String performPost(String url, PaymentDTO paymentDTO) throws Exception {
