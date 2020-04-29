@@ -6,4 +6,4 @@ After stopping the application execute
 ```
 ./gradlew composeDown
 ```
-to shut down rabbit container
+to shut down RabbitMQ container
