@@ -40,10 +40,12 @@ public class PaymentService {
                 .orElseThrow(() -> new NotFoundException("payment not found"));
     }
 
-    public void createPayment(String clientUsername, PaymentDTO paymentDTO) {
+    public Long createPayment(String clientUsername, PaymentDTO paymentDTO) {
         Payment payment = paymentMapper.toPayment(paymentDTO, clientRepository.getOne(clientUsername));
         paymentRepository.save(payment);
         issuePaymentNotifications(payment);
+
+        return payment.getId();
     }
 
     public void cancelPayment(String clientUsername, Long id) {

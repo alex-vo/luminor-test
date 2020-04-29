@@ -32,9 +32,9 @@ public class PaymentController {
     }
 
     @PostMapping
-    public void createPayment(Principal principal,
+    public Long createPayment(Principal principal,
                               @Validated(PaymentValidationSequence.class) @RequestBody PaymentDTO paymentDTO) {
-        paymentService.createPayment(principal.getName(), paymentDTO);
+        return paymentService.createPayment(principal.getName(), paymentDTO);
     }
 
     @PostMapping

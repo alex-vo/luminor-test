@@ -1,0 +1,8 @@
+{
+  "type": "TYPE2",
+  "amount": 20,
+  "currency": "EUR",
+  "creditorIban": "123",
+  "debtorIban": "123",
+  "details": "details_123"
+}

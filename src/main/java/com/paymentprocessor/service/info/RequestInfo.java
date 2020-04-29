@@ -16,6 +16,6 @@ public class RequestInfo implements Serializable {
 
     @Override
     public String toString() {
-        return "[" + requestPreview + ", ip='" + ip + ']';
+        return "[" + requestPreview + ", ip=" + ip + ']';
     }
 }
