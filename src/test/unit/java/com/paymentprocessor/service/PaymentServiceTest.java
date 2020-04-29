@@ -1,5 +1,6 @@
 package com.paymentprocessor.service;
 
+import com.paymentprocessor.config.RabbitMQSettings;
 import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
@@ -88,7 +89,7 @@ public class PaymentServiceTest {
         paymentService.createPayment("abc", paymentDTO);
 
         verify(paymentRepository).save(payment);
-        verify(rabbitTemplate).convertAndSend("notificationRoutingKey", new PaymentInfo(payment.getId(), payment.getType()));
+        verify(rabbitTemplate).convertAndSend(RabbitMQSettings.NOTIFICATION_ROUTING_KEY, new PaymentInfo(payment.getId(), payment.getType()));
     }
 
     @Test
@@ -158,10 +159,10 @@ public class PaymentServiceTest {
     @Test
     public void shouldDecideThatNotificationShouldBeIssuedBasedOnPaymentType() {
         ReflectionTestUtils.invokeMethod(paymentService, "issuePaymentNotifications", preparePayment(1L, null, PaymentType.TYPE1));
-        verify(rabbitTemplate).convertAndSend("notificationRoutingKey", new PaymentInfo(1L, PaymentType.TYPE1));
+        verify(rabbitTemplate).convertAndSend(RabbitMQSettings.NOTIFICATION_ROUTING_KEY, new PaymentInfo(1L, PaymentType.TYPE1));
 
         ReflectionTestUtils.invokeMethod(paymentService, "issuePaymentNotifications", preparePayment(2L, null, PaymentType.TYPE2));
-        verify(rabbitTemplate).convertAndSend("notificationRoutingKey", new PaymentInfo(2L, PaymentType.TYPE2));
+        verify(rabbitTemplate).convertAndSend(RabbitMQSettings.NOTIFICATION_ROUTING_KEY, new PaymentInfo(2L, PaymentType.TYPE2));
     }
 
     @Test

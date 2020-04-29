@@ -46,7 +46,6 @@ public class CountryLoggingService {
             CountryInfo countryInfo = externalServiceRestTemplate.getForObject(URL + requestInfo.getIp(), CountryInfo.class);
             return countryInfo.getCountryName();
         } catch (Throwable t) {
-            //TODO test 500, no response
             log.error(String.format("Failed to lookup country for request %s", requestInfo), t);
         }
 

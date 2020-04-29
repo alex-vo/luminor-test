@@ -1,5 +1,6 @@
 package com.paymentprocessor.service;
 
+import com.paymentprocessor.config.RabbitMQSettings;
 import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
@@ -72,7 +73,7 @@ public class PaymentService {
             return;
         }
 
-        rabbitTemplate.convertAndSend("notificationRoutingKey", new PaymentInfo(payment.getId(), payment.getType()));
+        rabbitTemplate.convertAndSend(RabbitMQSettings.NOTIFICATION_ROUTING_KEY, new PaymentInfo(payment.getId(), payment.getType()));
     }
 
 }

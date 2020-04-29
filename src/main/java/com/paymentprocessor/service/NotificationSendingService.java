@@ -3,7 +3,6 @@ package com.paymentprocessor.service;
 import com.paymentprocessor.repository.PaymentRepository;
 import com.paymentprocessor.service.info.PaymentInfo;
 import lombok.extern.slf4j.Slf4j;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,8 +53,8 @@ public class NotificationSendingService {
             }
 
             paymentRepository.updateExternalServiceNotifiedStatus(paymentInfo.getId(), true);
-            log.info(String.format("Notified external service about successful %s payment %d", paymentInfo.getPaymentType(),
-                    paymentInfo.getId()));
+            log.info(String.format("Notified external service '%s' about successful %s payment %d", url,
+                    paymentInfo.getPaymentType(), paymentInfo.getId()));
         } catch (Throwable t) {
             log.error(String.format("Failed to notify external service about successful %s payment %d",
                     paymentInfo.getPaymentType(), paymentInfo.getId()), t);

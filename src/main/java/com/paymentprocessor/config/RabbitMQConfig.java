@@ -26,7 +26,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue notificationDeadLetterQueue() {
-        return new Queue("notificationDeadLetterQueue", true, false, false);
+        return new Queue(RabbitMQSettings.NOTIFICATION_DEAD_LETTER_QUEUE_NAME, true, false, false);
     }
 
     @Bean
@@ -34,7 +34,7 @@ public class RabbitMQConfig {
         return new Queue("notificationQueue", true, false, false,
                 Map.of(
                         "x-dead-letter-exchange", "",
-                        "x-dead-letter-routing-key", "notificationDeadLetterQueue"
+                        "x-dead-letter-routing-key", RabbitMQSettings.NOTIFICATION_DEAD_LETTER_QUEUE_NAME
                 ));
     }
 
@@ -42,7 +42,7 @@ public class RabbitMQConfig {
     public Binding notificationBinding(Queue notificationQueue, TopicExchange exchange) {
         return BindingBuilder.bind(notificationQueue)
                 .to(exchange)
-                .with("notificationRoutingKey");
+                .with(RabbitMQSettings.NOTIFICATION_ROUTING_KEY);
     }
 
     @Bean
@@ -52,11 +52,12 @@ public class RabbitMQConfig {
 
     @Bean
     public SimpleMessageListenerContainer notificationContainer(ConnectionFactory connectionFactory,
-                                                                MessageListenerAdapter notificationListenerAdapter) {
+                                                                MessageListenerAdapter notificationListenerAdapter,
+                                                                Queue notificationQueue) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setDefaultRequeueRejected(false);
-        container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to notificationDeadLetterQueue", throwable));
-        container.setQueueNames("notificationQueue");
+        container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to " + RabbitMQSettings.NOTIFICATION_DEAD_LETTER_QUEUE_NAME, throwable));
+        container.setQueues(notificationQueue);
         container.setMessageListener(notificationListenerAdapter);
         return container;
     }
@@ -71,7 +72,7 @@ public class RabbitMQConfig {
         return new Queue("countryLoggingQueue", true, false, false,
                 Map.of(
                         "x-dead-letter-exchange", "",
-                        "x-dead-letter-routing-key", "countryLoggingDeadLetterQueue"
+                        "x-dead-letter-routing-key", RabbitMQSettings.COUNTRY_LOGGING_DEAD_LETTER_QUEUE_NAME
                 ));
     }
 
@@ -79,7 +80,7 @@ public class RabbitMQConfig {
     public Binding countryLoggingBinding(Queue countryLoggingQueue, TopicExchange exchange) {
         return BindingBuilder.bind(countryLoggingQueue)
                 .to(exchange)
-                .with("countryLoggingRoutingKey");
+                .with(RabbitMQSettings.COUNTRY_LOGGING_ROUTING_KEY);
     }
 
     @Bean
@@ -89,11 +90,12 @@ public class RabbitMQConfig {
 
     @Bean
     public SimpleMessageListenerContainer countryLoggingContainer(ConnectionFactory connectionFactory,
-                                                                  MessageListenerAdapter countryLoggingListenerAdapter) {
+                                                                  MessageListenerAdapter countryLoggingListenerAdapter,
+                                                                  Queue countryLoggingQueue) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setDefaultRequeueRejected(false);
         container.setErrorHandler(throwable -> log.error("Listener failed - message rerouted to countryLoggingDeadLetterQueue", throwable));
-        container.setQueueNames("countryLoggingQueue");
+        container.setQueues(countryLoggingQueue);
         container.setMessageListener(countryLoggingListenerAdapter);
         return container;
     }

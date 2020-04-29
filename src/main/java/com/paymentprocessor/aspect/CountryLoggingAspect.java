@@ -1,5 +1,6 @@
 package com.paymentprocessor.aspect;
 
+import com.paymentprocessor.config.RabbitMQSettings;
 import com.paymentprocessor.service.info.RequestInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +30,7 @@ public class CountryLoggingAspect {
         }
 
         rabbitTemplate.convertAndSend(
-                //TODO queue names to constants
-                "countryLoggingRoutingKey",
+                RabbitMQSettings.COUNTRY_LOGGING_ROUTING_KEY,
                 new RequestInfo(request.getRemoteAddr(), String.format("%s %s", request.getMethod(), request.getRequestURL()))
         );
     }

@@ -1,5 +1,6 @@
 package com.paymentprocessor.aspect;
 
+import com.paymentprocessor.config.RabbitMQSettings;
 import com.paymentprocessor.service.info.RequestInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +47,7 @@ public class CountryLoggingAspectTest {
 
         countryLoggingAspect.logCountry();
 
-        verify(rabbitTemplate, times(1)).convertAndSend(eq("countryLoggingRoutingKey"), eq(new RequestInfo("8.8.8.8", "GET http://abc.com")));
+        verify(rabbitTemplate, times(1)).convertAndSend(eq(RabbitMQSettings.COUNTRY_LOGGING_ROUTING_KEY), eq(new RequestInfo("8.8.8.8", "GET http://abc.com")));
     }
 
 }
