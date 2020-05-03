@@ -5,8 +5,8 @@ import com.paymentprocessor.service.NotificationSendingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
@@ -20,8 +20,8 @@ import java.util.Map;
 public class RabbitMQConfig {
 
     @Bean
-    public TopicExchange exchange() {
-        return new TopicExchange("paymentprocessor-exchange");
+    public DirectExchange exchange() {
+        return new DirectExchange("paymentprocessor-exchange");
     }
 
     @Bean
@@ -39,7 +39,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding notificationBinding(Queue notificationQueue, TopicExchange exchange) {
+    public Binding notificationBinding(Queue notificationQueue, DirectExchange exchange) {
         return BindingBuilder.bind(notificationQueue)
                 .to(exchange)
                 .with(RabbitMQSettings.NOTIFICATION_ROUTING_KEY);
@@ -77,7 +77,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding countryLoggingBinding(Queue countryLoggingQueue, TopicExchange exchange) {
+    public Binding countryLoggingBinding(Queue countryLoggingQueue, DirectExchange exchange) {
         return BindingBuilder.bind(countryLoggingQueue)
                 .to(exchange)
                 .with(RabbitMQSettings.COUNTRY_LOGGING_ROUTING_KEY);
