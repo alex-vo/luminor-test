@@ -42,11 +42,11 @@ public class PaymentRepositoryTest {
         LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
         Payment payment = preparePayment(BigDecimal.TEN, PaymentType.TYPE1, twoDaysAgo);
 
-        assertThat(paymentRepository.findByClientUsernameAndId(payment.getClient().getUsername(), payment.getId()).orElseThrow(), allOf(
+        assertThat(paymentRepository.findNotCancelledPayment(payment.getId(), payment.getClient().getUsername()).orElseThrow(), allOf(
                 hasProperty("type", is(PaymentType.TYPE1)),
                 hasProperty("created", is(twoDaysAgo))
         ));
-        assertThat(paymentRepository.findByClientUsernameAndId(payment.getClient().getUsername() + "a", payment.getId()), is(Optional.empty()));
+        assertThat(paymentRepository.findNotCancelledPayment(payment.getId(), payment.getClient().getUsername() + "a"), is(Optional.empty()));
     }
 
     private Payment preparePayment(BigDecimal amount) {
@@ -66,17 +66,6 @@ public class PaymentRepositoryTest {
         payment.setCurrency(PaymentCurrency.EUR);
         payment.setDetails("details_123");
         return paymentRepository.save(payment);
-    }
-
-    @Test
-    public void shouldCancelPaymentById() {
-        Payment payment = preparePayment(BigDecimal.valueOf(1));
-
-        paymentRepository.cancelPayment(payment.getId(), BigDecimal.valueOf(50));
-
-        assertThat(paymentRepository.findById(payment.getId()).orElseThrow(), allOf(
-                hasProperty("status", is(PaymentStatus.CANCELLED))
-        ));
     }
 
     @Test

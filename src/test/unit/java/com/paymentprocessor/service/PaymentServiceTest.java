@@ -6,12 +6,12 @@ import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
 import com.paymentprocessor.entity.Client;
 import com.paymentprocessor.entity.Payment;
+import com.paymentprocessor.entity.PaymentStatus;
 import com.paymentprocessor.entity.PaymentType;
 import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
 import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
-import com.paymentprocessor.repository.view.PaymentView;
 import com.paymentprocessor.service.info.PaymentInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -114,15 +114,15 @@ public class PaymentServiceTest {
 
     @Test(expected = NotFoundException.class)
     public void shouldThrowNotFoundExceptionIfClientNotFound() {
-        when(paymentRepository.findByClientUsernameAndId("user3", 190L)).thenReturn(Optional.empty());
+        when(paymentRepository.findNotCancelledPayment(190L, "user3")).thenReturn(Optional.empty());
 
         paymentService.cancelPayment("user3", 190L);
     }
 
     @Test(expected = BadRequestException.class)
     public void shouldThrowBadRequestExceptionIfCancellationIsTooLate() {
-        when(paymentRepository.findByClientUsernameAndId("user4", 191L))
-                .thenReturn(Optional.of(preparePaymentView(LocalDateTime.now().minusDays(1), PaymentType.TYPE1)));
+        when(paymentRepository.findNotCancelledPayment(191L, "user4"))
+                .thenReturn(Optional.of(preparePayment(191L, LocalDateTime.now().minusDays(1), PaymentType.TYPE1)));
 
         paymentService.cancelPayment("user4", 191L);
     }
@@ -132,28 +132,17 @@ public class PaymentServiceTest {
         LocalDateTime now = LocalDateTime.of(2020, 4, 28, 5, 30, 0);
         LocalDateTime created = LocalDateTime.of(2020, 4, 28, 2, 40, 0);
         PowerMockito.mockStatic(LocalDateTime.class);
-        PowerMockito.when(LocalDateTime.now()).thenReturn(now/*PowerMockito.mock(LocalDateTime.class)*/);
-
-        when(paymentRepository.findByClientUsernameAndId("user5", 192L))
-                .thenReturn(Optional.of(preparePaymentView(created, PaymentType.TYPE2)));
+        PowerMockito.when(LocalDateTime.now()).thenReturn(now);
+        Payment payment = preparePayment(192L, created, PaymentType.TYPE2);
+        when(paymentRepository.findNotCancelledPayment(192L, "user5"))
+                .thenReturn(Optional.of(payment));
 
         paymentService.cancelPayment("user5", 192L);
 
-        verify(paymentRepository).cancelPayment(192L, BigDecimal.valueOf(2).multiply(PaymentType.TYPE2.getCancellationFeeCoefficient()));
-    }
-
-    private PaymentView preparePaymentView(LocalDateTime created, PaymentType type) {
-        return new PaymentView() {
-            @Override
-            public LocalDateTime getCreated() {
-                return created;
-            }
-
-            @Override
-            public PaymentType getType() {
-                return type;
-            }
-        };
+        assertThat(payment, allOf(
+                hasProperty("cancellationFee", is(BigDecimal.valueOf(2).multiply(PaymentType.TYPE2.getCancellationFeeCoefficient()))),
+                hasProperty("status", is(PaymentStatus.CANCELLED))
+        ));
     }
 
     @Test

@@ -5,16 +5,17 @@ import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
 import com.paymentprocessor.entity.Payment;
+import com.paymentprocessor.entity.PaymentStatus;
 import com.paymentprocessor.entity.PaymentType;
 import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
 import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
-import com.paymentprocessor.repository.view.PaymentView;
 import com.paymentprocessor.service.info.PaymentInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -49,22 +50,23 @@ public class PaymentService {
         return payment.getId();
     }
 
+    @Transactional
     public void cancelPayment(String clientUsername, Long id) {
         LocalDateTime now = LocalDateTime.now();
-        PaymentView paymentView = paymentRepository.findByClientUsernameAndId(clientUsername, id)
+        Payment payment = paymentRepository.findNotCancelledPayment(id, clientUsername)
                 .orElseThrow(() -> new NotFoundException("payment not found"));
-        if (now.with(LocalTime.MIN).isAfter(paymentView.getCreated())) {
+        if (now.with(LocalTime.MIN).isAfter(payment.getCreated())) {
             throw new BadRequestException("cancellation timeout exceeded");
         }
 
-        BigDecimal cancellationFee = calculateCancellationFee(paymentView, now);
-
-        paymentRepository.cancelPayment(id, cancellationFee);
+        BigDecimal cancellationFee = calculateCancellationFee(payment, now);
+        payment.setCancellationFee(cancellationFee);
+        payment.setStatus(PaymentStatus.CANCELLED);
     }
 
-    private BigDecimal calculateCancellationFee(PaymentView paymentView, LocalDateTime relativeTo) {
-        BigDecimal hours = BigDecimal.valueOf(Duration.between(paymentView.getCreated(), relativeTo).toHours());
-        BigDecimal cancellationFeeCoefficient = paymentView.getType().getCancellationFeeCoefficient();
+    private BigDecimal calculateCancellationFee(Payment payment, LocalDateTime relativeTo) {
+        BigDecimal hours = BigDecimal.valueOf(Duration.between(payment.getCreated(), relativeTo).toHours());
+        BigDecimal cancellationFeeCoefficient = payment.getType().getCancellationFeeCoefficient();
         return hours.multiply(cancellationFeeCoefficient);
     }
 
