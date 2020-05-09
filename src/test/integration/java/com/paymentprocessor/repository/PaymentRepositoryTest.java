@@ -38,6 +38,22 @@ public class PaymentRepositoryTest {
     }
 
     @Test
+    public void shouldFindCancellationFeeById() {
+        Long cancelledId = preparePayment(BigDecimal.valueOf(1), PaymentType.TYPE1, LocalDateTime.now(),
+                PaymentStatus.CANCELLED, BigDecimal.TEN).getId();
+        Long newId = preparePayment(BigDecimal.valueOf(2)).getId();
+
+        assertThat(paymentRepository.findCancellationFeeById(newId).get(), allOf(
+                hasProperty("id", is(newId)),
+                hasProperty("cancellationFee", is(nullValue()))
+        ));
+        assertThat(paymentRepository.findCancellationFeeById(cancelledId).get(), allOf(
+                hasProperty("id", is(cancelledId)),
+                hasProperty("cancellationFee", comparesEqualTo(BigDecimal.TEN))
+        ));
+    }
+
+    @Test
     public void shouldFindPaymentByClientUsernameAndId() {
         LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
         Payment payment = preparePayment(BigDecimal.TEN, PaymentType.TYPE1, twoDaysAgo);
@@ -54,17 +70,23 @@ public class PaymentRepositoryTest {
     }
 
     private Payment preparePayment(BigDecimal amount, PaymentType type, LocalDateTime created) {
+        return preparePayment(amount, type, created, PaymentStatus.NEW, null);
+    }
+
+    private Payment preparePayment(BigDecimal amount, PaymentType type, LocalDateTime created, PaymentStatus status,
+                                   BigDecimal cancellationFee) {
         Client client = clientRepository.save(new Client(RandomStringUtils.random(5)));
         Payment payment = new Payment();
         payment.setAmount(amount);
         payment.setType(type);
         payment.setCreated(created);
         payment.setClient(client);
-        payment.setStatus(PaymentStatus.NEW);
+        payment.setStatus(status);
         payment.setCreditorIban(RandomStringUtils.random(5));
         payment.setDebtorIban(RandomStringUtils.random(5));
         payment.setCurrency(PaymentCurrency.EUR);
         payment.setDetails("details_123");
+        payment.setCancellationFee(cancellationFee);
         return paymentRepository.save(payment);
     }
 

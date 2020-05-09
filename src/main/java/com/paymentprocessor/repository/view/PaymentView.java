@@ -1,13 +1,11 @@
 package com.paymentprocessor.repository.view;
 
-import com.paymentprocessor.entity.PaymentType;
-
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 public interface PaymentView {
 
-    LocalDateTime getCreated();
+    Long getId();
 
-    PaymentType getType();
+    BigDecimal getCancellationFee();
 
 }

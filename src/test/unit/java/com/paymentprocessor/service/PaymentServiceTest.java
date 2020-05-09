@@ -4,6 +4,7 @@ import com.paymentprocessor.config.RabbitMQSettings;
 import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
+import com.paymentprocessor.dto.mapper.SinglePaymentDTOMapper;
 import com.paymentprocessor.entity.Client;
 import com.paymentprocessor.entity.Payment;
 import com.paymentprocessor.entity.PaymentStatus;
@@ -12,6 +13,7 @@ import com.paymentprocessor.exception.BadRequestException;
 import com.paymentprocessor.exception.NotFoundException;
 import com.paymentprocessor.repository.ClientRepository;
 import com.paymentprocessor.repository.PaymentRepository;
+import com.paymentprocessor.repository.view.PaymentView;
 import com.paymentprocessor.service.info.PaymentInfo;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +47,8 @@ public class PaymentServiceTest {
     ClientRepository clientRepository;
     @Mock
     RabbitTemplate rabbitTemplate;
+    @Mock
+    SinglePaymentDTOMapper singlePaymentDTOMapper;
 
     @InjectMocks
     PaymentService paymentService;
@@ -61,24 +65,21 @@ public class PaymentServiceTest {
 
     @Test(expected = NotFoundException.class)
     public void shouldThrowNotFoundExceptionIfPaymentNotFound() {
-        when(paymentRepository.findById(10L)).thenReturn(Optional.empty());
+        when(paymentRepository.findCancellationFeeById(10L)).thenReturn(Optional.empty());
 
         paymentService.findPayment(10L);
     }
 
     @Test
     public void shouldFindSinglePayment() {
-        Payment payment = mock(Payment.class);
-        when(payment.getId()).thenReturn(10L);
-        when(payment.getCancellationFee()).thenReturn(BigDecimal.TEN);
-        when(paymentRepository.findById(10L)).thenReturn(Optional.of(payment));
+        PaymentView paymentView = mock(PaymentView.class);
+        SinglePaymentDTO expectedResult = new SinglePaymentDTO();
+        when(singlePaymentDTOMapper.toSinglePaymentDTO(paymentView)).thenReturn(expectedResult);
+        when(paymentRepository.findCancellationFeeById(10L)).thenReturn(Optional.of(paymentView));
 
         SinglePaymentDTO result = paymentService.findPayment(10L);
 
-        assertThat(result, allOf(
-                hasProperty("id", is(10L)),
-                hasProperty("cancellationFee", is(BigDecimal.TEN))
-        ));
+        assertThat(result, is(expectedResult));
     }
 
     @Test

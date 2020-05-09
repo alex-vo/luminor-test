@@ -4,6 +4,7 @@ import com.paymentprocessor.config.RabbitMQSettings;
 import com.paymentprocessor.dto.PaymentDTO;
 import com.paymentprocessor.dto.SinglePaymentDTO;
 import com.paymentprocessor.dto.mapper.PaymentMapper;
+import com.paymentprocessor.dto.mapper.SinglePaymentDTOMapper;
 import com.paymentprocessor.entity.Payment;
 import com.paymentprocessor.entity.PaymentStatus;
 import com.paymentprocessor.entity.PaymentType;
@@ -31,14 +32,15 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final ClientRepository clientRepository;
     private final RabbitTemplate rabbitTemplate;
+    private final SinglePaymentDTOMapper singlePaymentDTOMapper;
 
     public Set<Long> findPaymentIds(BigDecimal amountFrom, BigDecimal amountTo) {
         return paymentRepository.findIdsByAmountBetween(amountFrom, amountTo);
     }
 
     public SinglePaymentDTO findPayment(Long id) {
-        return paymentRepository.findById(id)
-                .map(p -> new SinglePaymentDTO(p.getId(), p.getCancellationFee()))
+        return paymentRepository.findCancellationFeeById(id)
+                .map(singlePaymentDTOMapper::toSinglePaymentDTO)
                 .orElseThrow(() -> new NotFoundException("payment not found"));
     }
 
