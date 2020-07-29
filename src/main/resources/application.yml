@@ -1,6 +1,19 @@
 spring:
   jpa:
     open-in-view: false
+    properties:
+      javax:
+        persistence:
+          lock:
+            timeout: 0
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+    hibernate:
+      ddl-auto: create
+  datasource:
+    url: jdbc:postgresql://localhost:5432/test
+    username: postgres
+    password: postgres
   rabbitmq:
     template:
       exchange: "paymentprocessor-exchange"

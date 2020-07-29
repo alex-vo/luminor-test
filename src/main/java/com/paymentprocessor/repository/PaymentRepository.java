@@ -3,11 +3,13 @@ package com.paymentprocessor.repository;
 import com.paymentprocessor.entity.Payment;
 import com.paymentprocessor.repository.view.PaymentView;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.Set;
@@ -23,6 +25,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     Optional<PaymentView> findCancellationFeeById(Long id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p " +
             "from Payment p " +
             "where p.id = :pId and p.client.username = :pClientUsername " +
