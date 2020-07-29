@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +62,17 @@ public class PaymentService {
             throw new BadRequestException("cancellation timeout exceeded");
         }
 
-        BigDecimal cancellationFee = calculateCancellationFee(payment, now);
+        BigDecimal cancellationFee = BigDecimal.valueOf(ThreadLocalRandom.current().nextInt(20));
+        System.out.println("-----------------------------");
+        System.out.println(cancellationFee);
+        System.out.println("-----------------------------");
+        try {
+            Thread.sleep(10000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Woke up");
+
         payment.setCancellationFee(cancellationFee);
         payment.setStatus(PaymentStatus.CANCELLED);
     }
